@@ -99,7 +99,7 @@ including basic provenance information.
 
 .. figure:: /_static/sqa.png
    :name: fig-sqa-database
-   :target: ../../_static/sqa.png
+   :target: /_static/sqa.png
    :alt: SQuaRE QA database
 
    QA database model.
