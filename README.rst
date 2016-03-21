@@ -1,5 +1,5 @@
 ##########################
-SQR-008 SQuaRE QA database
+SQR-008 SQUASH QA database
 ##########################
 
 QA database design
