@@ -63,32 +63,50 @@ here:
 
 During pre-commissioning, the LSST DM Software and its data products are being 
 evaluated by processing precursor datasets from surveys like DECam, CFHT and 
-HSC. These verification datasets were selected to span a wide range of regimes 
+HSC. These verification datasets were selected to span a wide range of regimes
 and to test Level 1 (Alert Production) and Level 2 (Data Release Production) 
 data products.
 
-SQuaRE is concerned about preserving the knowlegde developed in this effort 
+SQuaRE is concerned about preserving the knowledge developed in this effort
 and reuse as much as possible the code in the production Data Quality Assessment 
-Framework (DQAF), possibly at all levels of QA. 
+Framework (DQAF), possibly at all levels of QA.
 
-In practice, that can be achieved by developing a prototype of the DQAF that 
-would be adopted, mantained and refined by the   *verification 
+In practice, that can be achieved by developing a prototype of the DQAF that
+would be adopted, mantained and refined by the   *verification
 scientists*. At the same time, they have similar needs in terms of data 
 access, data processing and visualization and would benefit from a common 
 infrastructure that facilitates all those aspects. 
 
-In this tehcnote we discuss the database model of this prototype system.
+In production, we want QA information associated to the sources and objects database
+and we expect that what we learn from this prototype implementation can be adapted
+to production later. We will try to distinguish which aspects of the present design
+are relevant to the LSST production database from those that are specific of the
+verification datasets use case.
 
-The database model
-==================
+Single Image Specifications
+===========================
+
+LPM-17 is the base document for the present design, it specifies single image requirements
+and the datasets used to compute them. In this section we summarize the requirements and propose
+queries to selects the datasets based on the outputs available in the LSST baseline database schema
+as specified by LSE-163.
+
+TODO: include table summarizing the single image requirements in LPM-17
+
+
+Selecting the QA datasets
+-------------------------
+
+TODO: queries to select datasets for image depth, image quality, astrometry and photometry accuracy based on LPM-17
+
+The QA database
+===============
  
 The database is being designed according to some general guidelines: 
 
 - Must store QA metrics and summary information for CCDs and Visits; 
 - QA metrics must be easily extended, i.e. without changing the schema;
 - Must be optimized for interactive visualization;
-- Should start by supporting single visit processing and eventually 
-  extend the model to co-add processing;
 - Must support DECam, CFHT and HSC images processed by the stack;
 
 The main difference between the verification datasets use case and the 
@@ -325,11 +343,6 @@ QA Metrics
 - Give me all metrics where at least one ccd failed in run xxx
 - Give me the fraction of visits in run xxxx that passed metric mmmm
 - Give me the value and sigma of the metric mmmm for all ccds in visit yyyy
-
-Single Image requirements
-=========================
-
-TODO: include table summarizing the single image requirements in LPM-17
 
 
 References
