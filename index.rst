@@ -84,8 +84,9 @@ infrastructure that facilitates all those aspects.
 
 The verification datasets use case has specific needs that must be
 distinguished from the production system. Since we are processing
-multiple datasets, it makes sense to accumulate QA information across multiple runs
-in a separate database. However, in production, each run will result in a different
+multiple datasets, it makes sense to accumulate QA information across multiple runs and compare
+the results later. That motivates an unified database model capable of storing QA results for
+different cameras. However,in production, each run will result in a different
 database with associated QA tables (http://ldm-135.readthedocs.org/). Despite those differences,
 the end goal of a prototype at this point is to leverage the design of the production QA database.
 
@@ -94,7 +95,7 @@ Single Image Requirements
 =========================
 
 LPM-17 is the basis for the present design, it specifies single image requirements
-and how to select the datasets to compute them. In this section we summarize the single image
+and how to select the samples to compute them. In this section we summarize the single image
 requirements and discuss the selection of the QA datasets based on the outputs available
 in the baseline database schema as specified by LSE-163.
 
@@ -114,18 +115,42 @@ exposure time of 30s.
 
 .. code-block:: sql
 
-    SELECT psFlux, psFluxSigma
+    SELECT visitId,
+           ccdVisitId,
+           psFlux,
+           psFluxSigma
     FROM Source s
-    INNER JOIN CcdVisit c ON s.ccdVisitId=c.ccdVisit
+    INNER JOIN CcdVisit c ON s.ccdVisitId=c.ccdVisitId
     INNER JOIN Visit v ON c.visitId=v.visitId
-    WHERE s.filterName='r' and c.seeing < 0.7 and s.skySigma > 21 and v.airmass < 1.2 and v.expTime = 30;
+    WHERE v.filterName='r'
+    AND c.seeing < 0.7
+    AND s.skySigma > 21
+    AND v.airmass < 1.2
+    AND v.expTime*v.nExposures = 30;
 
 
 **Notes**
-    Table 5 (Catalog `Source` table) in LSE-163 does not have `psFluxSigma` and Table 6 (Catalog `ForcedSource` table)
-    name this column as `psFluxErr`, however baseline schema has.
+    Table 5 (Catalog ``Source`` table) in LSE-163 does not have ``psFluxSigma``, Table 6 (Catalog ``ForcedSource`` table)
+    name this column as ``psFluxErr``.
 
-    Table 5 (Catalog `Source` table) does not have `filterName` in LSE-163, however baseline schema has.
+    Section 5.3 of LSE-163 has a note about denormalizing the tables for user convenience, but it seems unnecessary to
+    repeat ``filterName`` for all the sources in the ``Sources`` table and for all Ccds in the
+    ``CcdVisit`` table. ``filterName`` can be obtained by joining ``Source`` and ``Visit`` and it seems that these joins
+    are necessary anyways to get other metadata.
+
+    In LPM-17 magnitudes are in the AB system and in LSE-163 and in the baseline database schema
+    calibrated fluxes are in nmgy  (``psFlux``, ``psFluxSigma`` and ``skySigma``) should we specify the requirements
+    in nmgy instead?
+
+    The query looks for the sky background at the position of the source instead of looking at an average sky background
+    at the visit level, should we add the later to the visit table? or should we aggregate ``skyBg``
+    from the ``CcdVisit`` table and convert from DN to :math:`mag/arcsec^2`?
+
+    The  ``totalExpTime`` = ``expTime*nExposures`` looks like an useful quantity to store in the visits table.
+
+    The Image Depth requirements mention point sources but we don't have an ``extendedness`` parameter in the ``Sources``
+    table. Is the ``psFlux`` measurement enough?
+
 
 
 The overall image depth distribution
@@ -134,6 +159,10 @@ The overall image depth distribution
 **Specification:** The distribution of the 5 :math:`\sigma` (SNR=5) detection depth for point sources for all the exposures in
 the *r* band will have a median not brighter than D1 mag, and no more than DF1 % of images will have 5 :math:`\sigma` depth
 brighter than Z1 mag. D1 and Z1 are expressed in the AB system.
+
+**Notes**
+    Does *exposure* means visit here? in the sample selection we have ``totalExpTime = 30s``.
+    What does *image* mean? visit?
 
 
 .. _table-depth_distribution:
@@ -200,6 +229,9 @@ than Z2 mag than the median depth.
 
 Image Quality
 -------------
+**Notes**
+    There is no *extendedness* parameter in the ``Source`` table, how should we select stars for Image Quality requirements?
+
 
 Astrometry Accurracy
 --------------------
