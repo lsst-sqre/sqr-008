@@ -103,8 +103,8 @@ and double check with LSE-163
 Image depth
 -----------
 
-**Sample selection:**  *r* band images in good seeing <= 0.7 arcsec (FWHM) on photometric dark nights
-(*r*-band sky brightness >= 21 :math:`mag/arcsec^2`) close to the zenith (airmass <= 1.2) and total
+**Sample selection:**  *r* band images in good seeing < 0.7 arcsec (FWHM) on photometric dark nights
+(*r*-band sky brightness > 21 :math:`mag/arcsec^2`) close to the zenith (airmass < 1.2) and total
 exposure time of 30s.
 
 .. code-block:: sql
@@ -116,11 +116,11 @@ exposure time of 30s.
     WHERE s.filterName='r' and c.seeing < 0.7 and s.skySigma > 21 and v.airmass < 1.2 and v.expTime = 30;
 
 
-**Notes**:
+**Notes**
+    Table 5 (Catalog `Source` table) in LSE-163 does not have `psFluxSigma` and Table 6 (Catalog `ForcedSource` table)
+    name this column as `psFluxErr`, however baseline schema has.
 
-    - Table 5 (Catalog `Source` table) in LSE-163 does not have psFluxSigma and Table 6 (Catalog `ForcedSource` table) name this
- column as `psFluxErr`, baseline schema has.
-    - Table 5 (Catalog `Source` table) does not have filterName in LSE-163, baseline schema has.
+    Table 5 (Catalog `Source` table) does not have `filterName` in LSE-163, however baseline schema has.
 
 
 The overall image depth distribution
