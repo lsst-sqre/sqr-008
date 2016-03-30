@@ -136,7 +136,7 @@ exposure time of 30s.
     Section 5.3 of LSE-163 has a note about denormalizing the tables for user convenience, but it seems unnecessary to
     repeat ``filterName`` for all the sources in the ``Sources`` table and for all Ccds in the
     ``CcdVisit`` table. ``filterName`` can be obtained by joining ``Source`` and ``Visit`` and it seems that these joins
-    are necessary anyways to get other metadata.
+    are necessary to get other metadata anyway.
 
     In LPM-17 magnitudes are in the AB system and in LSE-163 and in the baseline database schema
     calibrated fluxes are in nmgy  (``psFlux``, ``psFluxSigma`` and ``skySigma``) should we specify the requirements
