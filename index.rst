@@ -72,48 +72,151 @@ and reuse as much as possible the code in the production Data Quality Assessment
 Framework (DQAF), possibly at all levels of QA.
 
 In practice, that can be achieved by developing a prototype of the DQAF that
-would be adopted, mantained and refined by the   *verification
-scientists*. At the same time, they have similar needs in terms of data 
+would be adopted, maintained and refined by the   *verification
+scientists*. At the same time, they have similar needs in terms of data
 access, data processing and visualization and would benefit from a common 
 infrastructure that facilitates all those aspects. 
 
-In production, we want QA information associated to the sources and objects database
-and we expect that what we learn from this prototype implementation can be adapted
-to production later. We will try to distinguish which aspects of the present design
-are relevant to the LSST production database from those that are specific of the
-verification datasets use case.
-
-Single Image Specifications
-===========================
-
-LPM-17 is the base document for the present design, it specifies single image requirements
-and the datasets used to compute them. In this section we summarize the requirements and propose
-queries to selects the datasets based on the outputs available in the LSST baseline database schema
-as specified by LSE-163.
-
-TODO: include table summarizing the single image requirements in LPM-17
+The verification datasets use case has specific needs that must be
+distinguished from the production system. Since we are processing
+multiple datasets, it makes sense to accumulate QA information across multiple runs
+in a separate database. However, in production, each run will result in a different
+database with associated QA tables (http://ldm-135.readthedocs.org/). Despite those differences,
+the end goal of a prototype at this point is to leverage the design of the production QA database.
 
 
-Selecting the QA datasets
--------------------------
+Single Image Requirements
+=========================
 
-TODO: queries to select datasets for image depth, image quality, astrometry and photometry accuracy based on LPM-17
+LPM-17 is the basis for the present design, it specifies single image requirements
+and how to select the datasets to compute them. In this section we summarize the single image
+requirements and discuss the selection of the QA datasets based on the outputs available
+in the baseline database schema as specified by LSE-163.
+
+TODO: include tables summarizing the single image requirements in LPM-17
+
+TODO: write queries to select datasets for image depth, image quality, astrometry and photometry accuracy based on LPM-17
+from the baseline database schema (https://lsst-web.ncsa.illinois.edu/schema/index.php?t=RefObjMatch&sVer=baseline)
+and double check with LSE-163
+
+
+Image depth
+-----------
+
+**Sample selection:**  *r* band images in good seeing <= 0.7 arcsec (FWHM) on photometric dark nights
+(*r*-band sky brightness >= 21 :math:`mag/arcsec^2`) close to the zenith (airmass <= 1.2) and total
+exposure time of 30s.
+
+.. code-block:: sql
+
+    SELECT psFlux, psFluxSigma
+    FROM Source s
+    INNER JOIN CcdVisit c ON s.ccdVisitId=c.ccdVisit
+    INNER JOIN Visit v ON c.visitId=v.visitId
+    WHERE s.filterName='r' and c.seeing < 0.7 and s.skySigma > 21 and v.airmass < 1.2 and v.expTime = 30;
+
+
+**Notes**:
+
+    - Table 5 (Catalog `Source` table) in LSE-163 does not have psFluxSigma and Table 6 (Catalog `ForcedSource` table) name this
+ column as `psFluxErr`, baseline schema has.
+    - Table 5 (Catalog `Source` table) does not have filterName in LSE-163, baseline schema has.
+
+
+The overall image depth distribution
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Specification:** The distribution of the 5 :math:`\sigma` (SNR=5) detection depth for point sources for all the exposures in
+the *r* band will have a median not brighter than D1 mag, and no more than DF1 % of images will have 5 :math:`\sigma` depth
+brighter than Z1 mag. D1 and Z1 are expressed in the AB system.
+
+
+.. _table-depth_distribution:
+.. table:: LPM-17 Table 5. Single visit depth distribution in *r* band at SNR=5 for point sources.
+
+    +-------------+-------------+--------------+--------------+
+    | Quantity    | Design Spec | Minimum Spec | Stretch Goal |
+    +=============+=============+==============+==============+
+    | D1 (mag)    |  24.7       |  24.3        |  24.8        |
+    +-------------+-------------+--------------+--------------+
+    | DF1 (%)     |  10         |  20          |  5           |
+    +-------------+-------------+--------------+--------------+
+    | Z1 (mag)    |  24.4       |  24          |  24.6        |
+    +-------------+-------------+--------------+--------------+
+
+DF1 is the fraction not of all exposures but of those in the selected sample.
+
+
+The variation of the image depth (throughput) with bandpass
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Specification:** The median 5 :math:`\sigma` (SNR=5) detection depth for point sources in a given band will not be brighter than DB1 mag.
+
+.. _table-single_visit_depth:
+.. table:: LPM-15 Table 6. Single visit depth (DB1) as function of bandpass
+
+    +-------------+-------------+--------------+--------------+
+    | Quantity    | Design Spec | Minimum Spec | Stretch Goal |
+    +=============+=============+==============+==============+
+    | u DB1 (mag) |  23.9       |  23.4        |  24          |
+    +-------------+-------------+--------------+--------------+
+    | g DB1 (mag) |  25.0       |  24.6        |  25.1        |
+    +-------------+-------------+--------------+--------------+
+    | r DB1 (mag) |  24.7       |  24.3        |  24.8        |
+    +-------------+-------------+--------------+--------------+
+    | i DB1 (mag) |  24.0       |  23.6        |  24.1        |
+    +-------------+-------------+--------------+--------------+
+    | z DB1 (mag) |  23.3       |  22.9        |  23.4        |
+    +-------------+-------------+--------------+--------------+
+    | y DB1 (mag) |  22.1       |  21.7        |  22.2        |
+    +-------------+-------------+--------------+--------------+
+
+The variation of the image depth over the field of view
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Specification:** For an image representative of the median depth (*i.e* with the 5 :math:`\sigma` detection depth
+of D1 mag), the depth distribution over individual devices will have no more than DF2 % of the sample brighter by more
+than Z2 mag than the median depth.
+
+.. _table-variation-over-fov:
+.. table:: LPM-15 Table 7. Image depth variation over the field of view. This apply to all bands.
+
+    +-------------+-------------+--------------+--------------+
+    | Quantity    | Design Spec | Minimum Spec | Stretch Goal |
+    +=============+=============+==============+==============+
+    | DF2 (%)     |  15         |  20          |  10          |
+    +-------------+-------------+--------------+--------------+
+    | Z2 (mag)    |  0.2        |  0.4         |  0.2         |
+    +-------------+-------------+--------------+--------------+
+
+
+
+
+
+Image Quality
+-------------
+
+Astrometry Accurracy
+--------------------
+
+Photometry Accurracy
+--------------------
 
 The QA database
 ===============
  
 The database is being designed according to some general guidelines: 
 
-- Must store QA metrics and summary information for CCDs and Visits; 
-- QA metrics must be easily extended, i.e. without changing the schema;
-- Must be optimized for interactive visualization;
-- Must support DECam, CFHT and HSC images processed by the stack;
+- Should store the results of the science requirements and summary information for CCDs and Visits;
+- Should be easily extended, i.e additional tests should be included without changing the schema;
+- Should be optimized for interactive visualization, i.e the results of the science requirements and summary information
+are pre-computed and stored in 'materialized views'  for performance improvements;
+- Must be camera agnostic, i.e support DECam, CFHT and HSC images processed by the stack;
 
-The main difference between the verification datasets use case and the 
-DQAF is that in production each run will result in a different 
-database with associated QA tables (http://ldm-135.readthedocs.org/) while 
-here the QA results from multiple runs will be acumulated in a single database,
-including basic provenance information.
+The main difference between the verification datasets use case and the production system is that
+here the QA results from multiple runs will be accumulated in a single database, including basic provenance information.
+Thus, in addition to the science requirements and summary information table we also have process information tables.
+
 
 .. figure:: _static/sqa.png
    :name: fig-sqa-database
@@ -127,10 +230,10 @@ The source code is maintained in this repo https://github.com/lsst-sqre/qa-datab
 
 The proposed database has three sets of tables:
 
-**Metrics**  
+**Science Requirements**
     Are based on the single image specification contained in the 
     Science Requirements Document (LPM-17) and associated to each single ccd. 
-    Metric descriptions, results, conditions and thresholds are stored in the 
+    Science Requirement descriptions, results, conditions and thresholds are stored in the
     metrics table. 
 **Summary Information** 
     They store medians and MADs (Median Absolute Deviations) of interesting 
