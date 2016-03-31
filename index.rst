@@ -96,15 +96,21 @@ Single Image Requirements
 
 LPM-17 is the basis for the present design, it specifies single image requirements
 and how to select the samples to compute them. In this section we summarize the single image
-requirements and discuss the selection of the QA datasets based on the outputs available
-in the baseline database schema as specified by LSE-163.
+requirements and discuss the sample selection based on the outputs available
+in the baseline database schema (https://lsst-web.ncsa.illinois.edu/schema/index.php?t=RefObjMatch&sVer=baseline)
+as specified by LSE-163.
 
-TODO: include tables summarizing the single image requirements in LPM-17
+The samples for computing Image Depth, Image Quality, Astrometry and Photometry accuracy requirements
+**should be create as views in the production database** for convenience.
 
-TODO: write queries to select datasets for image depth, image quality, astrometry and photometry accuracy based on LPM-17
-from the baseline database schema (https://lsst-web.ncsa.illinois.edu/schema/index.php?t=RefObjMatch&sVer=baseline)
+**TODO**: include tables summarizing the single image requirements in LPM-17
+
+**TODO**: write queries to select datasets for image depth, image quality, astrometry and photometry accuracy based on LPM-17
+from the baseline database schema
 and double check with LSE-163
 
+**TODO**: if we don't have the ingestion code ready for the prototype development (https://jira.lsstcorp.org/browse/DM-4811)
+how we are going to proceed?
 
 Image depth
 -----------
@@ -142,14 +148,16 @@ exposure time of 30s.
     calibrated fluxes are in nmgy  (``psFlux``, ``psFluxSigma`` and ``skySigma``) should we specify the requirements
     in nmgy instead?
 
-    The query looks for the sky background at the position of the source instead of looking at an average sky background
-    at the visit level, should we add the later to the visit table? or should we aggregate ``skyBg``
-    from the ``CcdVisit`` table and convert from DN to :math:`mag/arcsec^2`?
+    The query currently looks for the sky background at the position of the source instead of looking at an average
+    sky background at the visit level, should we add this summary information to the visit table?
+
+    Why ``skyBg`` is stored as counts in the ``CcdVisit`` table and ``sky`` is stored in :math:`mag/arcsec^2` in the
+    ``Sources`` table?
 
     The  ``totalExpTime`` = ``expTime*nExposures`` looks like an useful quantity to store in the visits table.
 
     The Image Depth requirements mention point sources but we don't have an ``extendedness`` parameter in the ``Sources``
-    table. Is the ``psFlux`` measurement enough?
+    table. Do we need to do co-addition first and then forced photometry to have this parameter associated to a source?
 
 
 
@@ -162,7 +170,7 @@ brighter than Z1 mag. D1 and Z1 are expressed in the AB system.
 
 **Notes**
     Does *exposure* means visit here? in the sample selection we have ``totalExpTime = 30s``.
-    What does *image* mean? visit?
+    What does *image* mean? visit too?
 
 
 .. _table-depth_distribution:
@@ -225,13 +233,22 @@ than Z2 mag than the median depth.
 
 
 
-
-
 Image Quality
 -------------
 **Notes**
     There is no *extendedness* parameter in the ``Source`` table, how should we select stars for Image Quality requirements?
 
+
+The delivered image size distribution
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    The *delivered seeing* is expressed using the equivalent Gaussian width computed from
+
+    :math:`seeing=0.663*pixelScale*\sqrt(n_{eff})
+
+    where :math:`pixelScale=0.2` and :math:`n_{eff}` is the effective number of pixels computed from
+
+    :math:`n_{eff}`=\frac{(\sum{f_i})^2}{\sum{f_i^2}}
 
 Astrometry Accurracy
 --------------------
