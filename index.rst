@@ -137,16 +137,19 @@ exposure time of 30s.
 
 **Notes**
     Table 5 (Catalog ``Source`` table) in LSE-163 does not have ``psFluxSigma``, Table 6 (Catalog ``ForcedSource`` table)
-    name this column as ``psFluxErr``.
+    has ``psFluxErr``, Table 2 (DIAObject table) has both.
 
     Section 5.3 of LSE-163 has a note about denormalizing the tables for user convenience, but it seems unnecessary to
     repeat ``filterName`` for all the sources in the ``Sources`` table and for all Ccds in the
     ``CcdVisit`` table. ``filterName`` can be obtained by joining ``Source`` and ``Visit`` and it seems that these joins
     are necessary to get other metadata anyway.
 
-    In LPM-17 magnitudes are in the AB system and in LSE-163 and in the baseline database schema
-    calibrated fluxes are in nmgy  (``psFlux``, ``psFluxSigma`` and ``skySigma``) should we specify the requirements
-    in nmgy instead?
+    In LPM-17, requirements are specified in AB magnitudes while in LSE-163 and in the baseline database schema the columns
+    (``psFlux``, ``psFluxSigma`` and ``skySigma``) are fluxes in units of "maggie". A view in the database with
+    those columns in magnitudes would facilitate the comparison with the science requirements. A function in the database
+    to convert from maggie to AB magnitudes would also be useful, it seems that the current Science Tools
+    for MySQL has only AB fluxes to AB magnitude conversion (https://lsst-web.ncsa.illinois.edu/schema/sciSQL_0.3/#photometry-scisql_fluxToAbMag)
+
 
     The query currently looks for the sky background at the position of the source instead of looking at an average
     sky background at the visit level, should we add this summary information to the visit table?
