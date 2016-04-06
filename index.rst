@@ -132,7 +132,8 @@ exposure time of 30s.
     AND c.seeing < 0.7
     AND s.skySigma > 21
     AND v.airmass < 1.2
-    AND v.expTime*v.nExposures = 30;
+    AND v.expTime*v.nExposures = 30
+    AND s.flags=0;
 
 
 **Notes**
@@ -161,6 +162,10 @@ exposure time of 30s.
 
     The Image Depth requirements mention point sources but we don't have an ``extendedness`` parameter in the ``Sources``
     table. Do we need to do co-addition first and then forced photometry to have this parameter associated to a source?
+
+    The way photometric flags are implemented in the current database baseline schema is not defined, assumming a bitmask
+    will be used, the condition ``flags=0`` ensures bad sources are rejected.
+
 
 
 
