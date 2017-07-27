@@ -1,8 +1,20 @@
 sudo: false
 language: python
-python:
-      - 3.4
-install: "pip install -r requirements.txt"
-script: "make html"
-notifications:
-      email: false
+matrix:
+  include:
+    - python: "3.5"
+      env: LTD_MASON_BUILD=true
+install:
+  - pip install -r requirements.txt
+  - pip install "ltd-mason>=0.2,<0.3"
+script:
+  - sphinx-build -b html -a -n -d _build/doctree . _build/html
+after_success:
+  - ltd-mason-travis --html-dir _build/html
+env:
+  global:
+    - LTD_MASON_BUILD=false  # disable builds in regular text matrix
+    - LTD_MASON_PRODUCT="sqr-008"
+    # Add AWS and LTD Keeper credentials as encrypted secrets here
+    - secure: "CmUVBZ0v04pV18fGfHuoJCDQKyyU5ab2hGCzGYQC0IloRpf2mD4k9CWVbEgaYCYjasqQmm4sVVaIF4Puz4WxEU0TaQXmZfk4gnaVGUEm4hWxQPp78y9y3h8RmH3UMY1lBNjC6WC6Bgad8Cdm0Lz8XX7A51oTByON0zEAqidFGd3iD23oYksp4RU+VsRhPp8hoOJh/oVxoc4NvM4aT0BKgeZGYwgx1dCuhC2k0XjeW2AW+4E6vSL8tw9O+hv36PBieK63rw6w2LTUm2nkRr07wRgbp8SHiTwLvgiNSrj+tYVA+B9y4GDQZaJklg3U9oKTlW17KQ/kWFEN07h2Zso74sUA+WyIDYXO3NrNOYaa1vR5s5/tltPjg6Ufczk0vVSOKqWqU2ii0dMTLBV+A6v3lNZ9uu2yUlW/fOQ/7N9flqfxg8julIMNc63fPVS7kXOo7upj0sYLc6r+qVrcOfTcrm7f/Q0XXt2PQCV6g1pKEYEzyayYElyKXYZKP56MqLyLSjFNNa/+ZlH73heZUbJB3e8xUV0dhoqUrKZTRTHfMwVo+qQyDGPfzBvZTceJIGV3I632zARbyorStuamNsfY7eKungwOomSI3a927Upu6lqjL9Gv4BQ9/sD3bqOuqjIphyESWXJ4TgVLnHg+yWGDFMBViEQsdDV/71YZcq59Tsc="
+    - secure: "SLYqp+ACr2CNId0xYGH7xkf2AsV+PCcopkDgMqjiAfGeePfgUpDktw/WN1Fls/4hwYfueDZHK9Ibwt54JbtZZGHhmuRnnwdd3M3FoSKC4aB0UfHsnLDCFgl8Ep31+iIBiqTtx67Jmid8vCW8DWVL/YIoMO1fGWYNILpK1lu1vyQPPVgvKQm7FgsbZ0zgLvjc0+yuu+4MY6BxInl76zvXpMIAbRZ5y8B//hfOfgLoo7bNckxdbK0ldCy0B+5jO8pc5bN4GgdouzQc4m7Dm+uzLrL4rg2BzsQxjBL31s1UMzTXTc27vUHjEH7yjRCGBJ6OhTFMQ2p5elrpz1svzA0luTOzSJueInOlmI0KHPTbgZJsBWzZ8Zb3FxjOtr8W5olhvLPtr2YRJrEjqDW0pNikRQHZXKnzeImJ9SZw1jWK4lHqyz2UowuKTM/Y8ETM5388/KoaDuc93SPPJ7UsGV7TvMs2SAdfKTUU+XYaSSH9CB0kZvzsmhW2Efx3CkhNtJyf6tpLSVq2bSQjWaZ03Wct/jZtx5sKtIwGW9WzyS+7T4yAHs3JkF9ahxeNX9pXhQwNU+MkGyQ1mK0tpLjvZ1UDvijfn17r6yhovCrRYa3CIatbA4BGvhhG3jRC3Idk7KCEJo/6x7rgMDJ5EAvblJUnaUUvAXDWzuWu0UBQW8FfQjc="
